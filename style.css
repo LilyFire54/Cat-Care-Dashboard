@@ -112,3 +112,12 @@ button:hover {
         opacity: 0;
     }
 }
+
+@media (max-width: 600px) {
+    .floating-gif {
+        width: 80px;       /* smaller on mobile */
+        bottom: 10px;      /* reduce space from bottom */
+        opacity: 0.5;      /* less distracting */
+        z-index: 0;        /* ensure it stays behind */
+    }
+}
