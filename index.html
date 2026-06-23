@@ -1,60 +1,647 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cat Care Dashboard</title>
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cat Care Dashboard 🐾</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Fredoka+One&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --pink:#f2a7c3;--pink-light:#ffeef6;--pink-mid:#f7d0e4;
+  --lavender:#d4b8e8;--lav-light:#f5eeff;--lav-mid:#e8d8f7;
+  --cream:#fdf6ff;--white:#ffffff;
+  --text:#4a3f5c;--text-soft:#9a88b0;--text-muted:#c9b8d8;
+  --green:#7dd9a8;--green-light:#f0fff6;--green-border:#a8e6c4;
+  --rose:#e8819f;--border:#f0ddf4;
+  --shadow:0 4px 20px rgba(210,170,230,0.15);
+}
+body{font-family:'Nunito',sans-serif;background:var(--cream);color:var(--text);min-height:100vh;}
+
+.bg-paws{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
+.paw-track{position:absolute;opacity:0;animation:pawWalk linear infinite;}
+@keyframes pawWalk{0%{opacity:0;transform:translate(0,0) rotate(var(--r));}8%{opacity:var(--op);}88%{opacity:calc(var(--op)*0.6);}100%{opacity:0;transform:translate(var(--dx),var(--dy)) rotate(var(--r));}}
+
+.page{position:relative;z-index:1;max-width:960px;margin:0 auto;padding:1.5rem 1.25rem 4rem;}
+
+/* HEADER */
+header{text-align:center;padding:1rem 0 0.5rem;}
+
+.kitty-wrap{display:inline-block;animation:kittyFloat 3.5s ease-in-out infinite;}
+@keyframes kittyFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+
+.kitty-svg{width:180px;height:180px;}
+
+/* eye blink overlay — covers the eye ellipses with white rects that scale */
+.eye-blink{animation:eyeBlink 5s ease-in-out infinite;transform-box:fill-box;transform-origin:center;}
+@keyframes eyeBlink{0%,88%,94%,100%{transform:scaleY(1)}91%{transform:scaleY(0.05)}}
+
+/* tail wag */
+.tail-wag{animation:tailWag 2.8s ease-in-out infinite;transform-origin:705px 710px;}
+@keyframes tailWag{0%,100%{transform:rotate(0deg)}50%{transform:rotate(14deg)}}
+
+/* bow bounce */
+.bow-bounce{animation:bowB 3s ease-in-out infinite;transform-origin:405px 285px;}
+@keyframes bowB{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}
+
+h1{font-family:'Fredoka One',cursive;font-size:2.1rem;color:#c45c8a;letter-spacing:0.02em;margin-top:0.4rem;}
+.tagline{font-size:0.78rem;color:var(--text-muted);letter-spacing:0.18em;text-transform:uppercase;margin:0.15rem 0 0.6rem;}
+.date-pill{display:inline-flex;align-items:center;gap:0.4rem;background:var(--pink-light);border:1.5px solid var(--pink-mid);border-radius:999px;padding:0.3rem 1.1rem;font-size:0.8rem;color:#c45c8a;font-weight:700;}
+
+/* SECTION LABEL */
+.section-label{font-family:'Fredoka One',cursive;font-size:0.85rem;color:var(--text-soft);letter-spacing:0.1em;text-transform:uppercase;margin:1.25rem 0 0.6rem;}
+
+/* CAT CHIPS */
+.cats-row{display:flex;flex-wrap:wrap;gap:0.6rem;align-items:center;}
+.cat-chip{display:flex;align-items:center;gap:0.4rem;padding:0.35rem 0.9rem 0.35rem 0.5rem;border-radius:999px;border:2px solid var(--border);background:var(--white);font-size:0.82rem;font-weight:700;color:var(--text);cursor:pointer;transition:all 0.2s;user-select:none;}
+.cat-chip.active{border-color:var(--pink);background:var(--pink-light);color:#c45c8a;}
+.cat-chip:hover{border-color:var(--lavender);}
+.chip-avatar{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;background:var(--pink-mid);}
+.cat-chip .del-chip{display:none;background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:12px;margin-left:2px;line-height:1;}
+.cat-chip:hover .del-chip{display:inline;}
+.add-cat-btn{display:flex;align-items:center;gap:0.3rem;padding:0.35rem 0.9rem;border-radius:999px;border:2px dashed var(--border);background:transparent;font-size:0.82rem;font-weight:700;color:var(--text-soft);cursor:pointer;transition:all 0.2s;font-family:'Nunito',sans-serif;}
+.add-cat-btn:hover{border-color:var(--pink);color:#c45c8a;}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(74,63,92,0.35);z-index:100;align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--white);border-radius:24px;padding:1.75rem;width:min(340px,90vw);border:2px solid var(--pink-mid);}
+.modal h3{font-family:'Fredoka One',cursive;color:#c45c8a;font-size:1.2rem;margin-bottom:1rem;}
+.modal input,.modal select{width:100%;border:1.5px solid var(--border);border-radius:10px;padding:0.5rem 0.75rem;font-family:'Nunito',sans-serif;font-size:0.88rem;color:var(--text);background:var(--cream);outline:none;margin-bottom:0.75rem;}
+.modal input:focus{border-color:var(--lavender);}
+.emoji-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:1rem;}
+.emoji-opt{width:36px;height:36px;border-radius:10px;border:2px solid var(--border);background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;transition:all 0.15s;}
+.emoji-opt.picked{border-color:var(--pink);background:var(--pink-light);}
+.modal-btns{display:flex;gap:0.5rem;justify-content:flex-end;}
+.btn-cancel{background:transparent;border:1.5px solid var(--border);border-radius:10px;padding:0.45rem 1rem;font-family:'Nunito',sans-serif;font-size:0.84rem;color:var(--text-soft);cursor:pointer;}
+.btn-save{background:var(--pink);border:none;border-radius:10px;padding:0.45rem 1.2rem;font-family:'Nunito',sans-serif;font-size:0.84rem;font-weight:700;color:#fff;cursor:pointer;}
+.btn-save:hover{background:var(--rose);}
+
+/* GRID */
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem;margin-top:0.25rem;}
+.grid-full{grid-column:1/-1;}
+@media(max-width:560px){.grid{grid-template-columns:1fr;}}
+
+/* CARDS */
+.card{background:var(--white);border:2px solid var(--border);border-radius:22px;padding:1.3rem;position:relative;overflow:hidden;transition:border-color 0.2s,box-shadow 0.2s;}
+.card:hover{border-color:var(--pink-mid);box-shadow:var(--shadow);}
+.card::after{content:'';position:absolute;top:-22px;right:-22px;width:75px;height:75px;border-radius:50%;background:var(--pink-light);opacity:0.7;pointer-events:none;}
+.card-title{display:flex;align-items:center;gap:0.5rem;font-family:'Fredoka One',cursive;font-size:1.05rem;color:#c45c8a;margin-bottom:1rem;}
+
+/* TASKS */
+.task-item{display:flex;align-items:center;gap:0.6rem;padding:0.5rem 0.75rem;border-radius:12px;border:1.5px solid var(--border);background:var(--cream);margin-bottom:0.4rem;cursor:pointer;transition:all 0.2s;user-select:none;}
+.task-item:hover{border-color:var(--pink);background:var(--pink-light);}
+.task-item.done{background:var(--green-light);border-color:var(--green-border);}
+.bubble{width:20px;height:20px;border-radius:50%;border:2px solid var(--lavender);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:transparent;transition:all 0.25s;}
+.task-item.done .bubble{background:var(--green);border-color:var(--green);color:#fff;}
+.task-lbl{font-size:0.86rem;font-weight:700;color:var(--text);transition:color 0.2s;flex:1;}
+.task-item.done .task-lbl{color:#5dba8a;text-decoration:line-through;text-decoration-color:rgba(93,186,138,0.4);}
+.progress-row{display:flex;align-items:center;gap:0.6rem;margin-top:0.75rem;}
+.progress-bar{flex:1;height:8px;background:var(--border);border-radius:999px;overflow:hidden;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--pink),var(--lavender));border-radius:999px;transition:width 0.4s ease;}
+.progress-label{font-size:0.75rem;font-weight:700;color:var(--text-soft);}
+.reset-btn{width:100%;margin-top:0.75rem;background:transparent;border:1.5px solid var(--border);border-radius:10px;padding:0.4rem;color:var(--text-muted);font-family:'Nunito',sans-serif;font-size:0.78rem;font-weight:700;cursor:pointer;transition:all 0.2s;}
+.reset-btn:hover{border-color:var(--lavender);color:var(--text-soft);}
+
+/* CONFETTI */
+.celebrate{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:200;}
+.confetti-piece{position:absolute;width:8px;height:8px;border-radius:2px;animation:confettiFall 1.8s ease forwards;}
+@keyframes confettiFall{0%{transform:translateY(-20px) rotate(0deg);opacity:1;}100%{transform:translateY(100vh) rotate(720deg);opacity:0;}}
+
+/* FEEDING */
+.feed-form{display:flex;gap:0.4rem;margin-bottom:0.75rem;flex-wrap:wrap;}
+.feed-input{background:var(--cream);border:1.5px solid var(--border);border-radius:10px;padding:0.42rem 0.65rem;font-family:'Nunito',sans-serif;font-size:0.82rem;color:var(--text);outline:none;transition:border-color 0.2s;}
+.feed-input:focus{border-color:var(--lavender);}
+.feed-input::placeholder{color:var(--text-muted);}
+.add-btn{background:var(--pink);border:none;border-radius:10px;padding:0.42rem 1rem;color:#fff;font-family:'Nunito',sans-serif;font-size:0.82rem;font-weight:700;cursor:pointer;transition:background 0.2s;white-space:nowrap;}
+.add-btn:hover{background:var(--rose);}
+.feed-log{display:flex;flex-direction:column;gap:0.35rem;max-height:200px;overflow-y:auto;}
+.feed-log::-webkit-scrollbar{width:4px;}
+.feed-log::-webkit-scrollbar-thumb{background:var(--pink-mid);border-radius:2px;}
+.feed-entry{display:flex;align-items:center;gap:0.5rem;padding:0.42rem 0.7rem;background:var(--cream);border:1.5px solid var(--border);border-radius:10px;font-size:0.8rem;animation:popIn 0.3s ease;}
+@keyframes popIn{from{transform:scale(0.9);opacity:0;}to{transform:scale(1);opacity:1;}}
+.feed-time-tag{background:var(--pink-light);color:#c45c8a;padding:2px 8px;border-radius:999px;font-size:0.72rem;font-weight:700;}
+.feed-cat-tag{background:var(--lav-mid);color:#7a56a8;padding:2px 8px;border-radius:999px;font-size:0.72rem;font-weight:700;}
+.feed-note-text{flex:1;color:var(--text);}
+.del-btn{background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1rem;line-height:1;padding:0 2px;transition:color 0.15s;}
+.del-btn:hover{color:var(--rose);}
+.feed-empty{text-align:center;color:var(--text-muted);font-size:0.8rem;padding:0.75rem 0;font-style:italic;}
+
+/* CALENDAR */
+.cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;}
+.cal-month{font-family:'Fredoka One',cursive;color:#c45c8a;font-size:1rem;}
+.cal-nav-btn{background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:1.1rem;padding:0 4px;transition:color 0.15s;}
+.cal-nav-btn:hover{color:#c45c8a;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+.cal-dn{text-align:center;font-size:0.64rem;color:var(--text-muted);font-weight:700;padding-bottom:5px;text-transform:uppercase;}
+.cal-d{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:9px;font-size:0.72rem;font-weight:700;color:var(--text-soft);cursor:pointer;transition:all 0.15s;}
+.cal-d:hover:not(.empty){background:var(--pink-light);}
+.cal-d.today{background:var(--pink);color:#fff;}
+.cal-d.empty{opacity:0;pointer-events:none;}
+
+/* REMINDERS */
+.reminder-item{display:flex;align-items:center;gap:0.6rem;padding:0.5rem 0.75rem;border-radius:12px;border:1.5px solid var(--border);background:var(--cream);margin-bottom:0.4rem;font-size:0.82rem;}
+.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.dot.red{background:#f0a0a0;}.dot.amber{background:#f0c878;}.dot.green{background:var(--green);}
+.rem-text{flex:1;font-weight:700;color:var(--text);}
+.rem-date{font-size:0.72rem;color:var(--text-soft);font-weight:600;}
+.rem-countdown{font-size:0.7rem;padding:2px 8px;border-radius:999px;font-weight:700;}
+.rem-countdown.soon{background:#fff0f0;color:#d06060;}
+.rem-countdown.near{background:#fff8e8;color:#c08020;}
+.rem-countdown.ok{background:var(--green-light);color:#3a9060;}
+.rem-add-row{display:flex;gap:0.4rem;margin-top:0.75rem;flex-wrap:wrap;}
+
+/* HEALTH */
+.health-row{display:flex;align-items:center;gap:0.6rem;margin-bottom:0.5rem;}
+.health-label{font-size:0.8rem;font-weight:700;color:var(--text-soft);width:70px;flex-shrink:0;}
+.mood-btns{display:flex;gap:0.3rem;}
+.mood-btn{width:32px;height:32px;border-radius:50%;border:2px solid var(--border);background:var(--cream);font-size:15px;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;justify-content:center;}
+.mood-btn:hover{border-color:var(--pink);transform:scale(1.1);}
+.mood-btn.active{border-color:var(--pink);background:var(--pink-light);transform:scale(1.08);}
+
+/* NOTES */
+.notes-ta{width:100%;border:1.5px solid var(--border);border-radius:12px;background:var(--cream);padding:0.7rem;font-family:'Nunito',sans-serif;font-size:0.84rem;color:var(--text);resize:none;outline:none;min-height:80px;line-height:1.65;transition:border-color 0.2s;}
+.notes-ta:focus{border-color:var(--lavender);}
+.notes-ta::placeholder{color:var(--text-muted);font-style:italic;}
+
+/* FOOTER */
+.paw-trail{display:flex;gap:3px;justify-content:center;margin-top:2rem;opacity:0.2;font-size:1rem;}
+footer{text-align:center;font-size:0.72rem;color:var(--text-muted);margin-top:0.5rem;font-weight:600;letter-spacing:0.1em;}
+
+/* TOAST */
+.toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(80px);background:var(--text);color:#fff;padding:0.6rem 1.5rem;border-radius:999px;font-size:0.82rem;font-weight:700;z-index:300;transition:transform 0.3s ease;pointer-events:none;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+</style>
 </head>
 <body>
 
-    <header>
-        <img src="./images/firelily-logo3.png" alt="FireLily Logo" class="logo">
-        <h1>Cat Care Dashboard</h1>
-    </header>
-    
-    <section id="calendar">
-        <h2>Cat Care Calendar</h2>
-        <input type="date" id="care-date" />
-        <button id="add-date">Add to Calendar</button>
+<div class="bg-paws" id="bg-paws"></div>
 
-        <ul id="calendar-list"></ul>
-        <hr>
-    </section>
+<div class="page">
+  <header>
+    <!-- THE KITTY -->
+    <div class="kitty-wrap">
+      <svg class="kitty-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" role="img" aria-label="Cute white and pink kitty">
+        <defs>
+          <linearGradient id="pinkGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#ffb6d1"/>
+            <stop offset="100%" stop-color="#ff5f9b"/>
+          </linearGradient>
+        </defs>
+        <g stroke-linecap="round" stroke-linejoin="round">
+          <g class="tail-wag">
+            <path d="M705 710 C810 665 835 540 755 526 C695 516 670 578 710 618 C746 654 787 612 760 580" fill="none" stroke="#f35c95" stroke-width="18"/>
+          </g>
+          <path d="M350 525 C278 610 266 775 350 850 C420 913 580 915 652 850 C735 774 715 610 650 525 C610 475 390 475 350 525Z" fill="#fffefe" stroke="#f35c95" stroke-width="16"/>
+          <path d="M440 620 C425 705 420 805 420 875" fill="none" stroke="#f35c95" stroke-width="12"/>
+          <path d="M560 620 C575 705 580 805 580 875" fill="none" stroke="#f35c95" stroke-width="12"/>
+          <path d="M370 855 C392 835 435 842 440 884" fill="none" stroke="#f35c95" stroke-width="10"/>
+          <path d="M630 855 C608 835 565 842 560 884" fill="none" stroke="#f35c95" stroke-width="10"/>
+          <path d="M360 875 C380 902 425 902 445 875" fill="#fffefe" stroke="#f35c95" stroke-width="10"/>
+          <path d="M555 875 C575 902 620 902 640 875" fill="#fffefe" stroke="#f35c95" stroke-width="10"/>
+          <path d="M392 876 L392 900 M420 876 L420 900 M586 876 L586 900 M614 876 L614 900" stroke="#f35c95" stroke-width="7" fill="none"/>
+          <path d="M222 425 C175 300 177 180 198 162 C225 140 355 185 420 250 C475 230 560 230 620 250 C685 145 780 52 815 75 C855 104 880 260 858 390 C910 450 905 565 835 638 C750 725 584 730 500 695 C415 730 250 722 165 638 C95 565 98 450 222 425Z" fill="#fffefe" stroke="#f35c95" stroke-width="18"/>
+          <path d="M230 195 C285 210 355 250 395 305 C335 292 270 315 225 365 C240 305 230 250 230 195Z" fill="#ffc2d9" opacity="0.9"/>
+          <path d="M785 105 C742 150 692 220 672 305 C720 282 775 292 826 365 C832 265 815 178 785 105Z" fill="#ffc2d9" opacity="0.9"/>
+          <path d="M255 355 C282 335 315 330 350 342" fill="none" stroke="#f35c95" stroke-width="9"/>
+          <path d="M740 300 C710 300 690 310 675 332 C700 322 728 322 750 335" fill="none" stroke="#f35c95" stroke-width="9"/>
 
-    <section id="tasks">
-        <h2>Tasks</h2>
-        <ul id="task-list">
-            <li><label><input type="checkbox">Feed the cat</label></li>
-            <li><label><input type="checkbox">Clean litterbox</label> </li>
-            <li><label><input type="checkbox">Play with the cats</label></li>
-            <li><label><input type="checkbox">Check water fountain</label></li>
-            <li><label><input type="checkbox">Brush cats</label></li>
-        </ul>
-        <button id="reset-tasks">Reset All</button>
-    </section>
+          <!-- BOW -->
+          <g class="bow-bounce">
+            <g transform="translate(315 210) rotate(8)">
+              <path d="M75 55 C15 5 -45 35 -48 95 C-50 150 25 160 75 85Z" fill="url(#pinkGrad)" stroke="#f35c95" stroke-width="10"/>
+              <path d="M105 55 C165 5 225 35 228 95 C230 150 155 160 105 85Z" fill="url(#pinkGrad)" stroke="#f35c95" stroke-width="10"/>
+              <circle cx="90" cy="75" r="28" fill="#ff9fc3" stroke="#f35c95" stroke-width="9"/>
+              <path d="M35 67 C45 55 60 48 72 45 M145 67 C132 55 119 49 108 45" fill="none" stroke="#e44782" stroke-width="5"/>
+            </g>
+          </g>
 
-    <section id="tracker">
-        <h2>Daily Tracker</h2>
-        <form>
-            <label for="feeding-time">Feeding Time:</label>
-            <input type="time" id="feeding-time">
-            <button type="submit">Add Feeding Time</button>
-        </form>
+          <!-- EYES with blink group -->
+          <g class="eye-blink">
+            <ellipse cx="365" cy="455" rx="52" ry="68" fill="#1d171a"/>
+            <ellipse cx="635" cy="455" rx="52" ry="68" fill="#1d171a"/>
+            <path d="M325 430 C345 398 383 390 407 420" fill="none" stroke="#ff8bb8" stroke-width="10"/>
+            <path d="M595 430 C615 398 653 390 677 420" fill="none" stroke="#ff8bb8" stroke-width="10"/>
+            <circle cx="345" cy="425" r="18" fill="#ffffff" opacity="0.95"/>
+            <circle cx="615" cy="425" r="18" fill="#ffffff" opacity="0.95"/>
+            <circle cx="390" cy="485" r="10" fill="#ffffff" opacity="0.95"/>
+            <circle cx="660" cy="485" r="10" fill="#ffffff" opacity="0.95"/>
+            <path d="M315 392 C300 380 295 370 292 360 M325 390 C318 372 318 360 322 348" stroke="#1d171a" stroke-width="7" fill="none"/>
+            <path d="M685 392 C700 380 705 370 708 360 M675 390 C682 372 682 360 678 348" stroke="#1d171a" stroke-width="7" fill="none"/>
+          </g>
 
-        <h3>Scheduled Feeding Times</h3>
-        <ul id="feeding-times">
-            <!-- Feeding times will appear here -->
-        </ul>
-    </section>
+          <ellipse cx="315" cy="535" rx="38" ry="22" fill="#ff9fbd" opacity="0.85"/>
+          <ellipse cx="685" cy="535" rx="38" ry="22" fill="#ff9fbd" opacity="0.85"/>
+          <path d="M500 500 C475 475 440 500 500 530 C560 500 525 475 500 500Z" fill="#ff77aa" stroke="#f35c95" stroke-width="7"/>
+          <path d="M500 530 C495 560 470 580 445 560" fill="none" stroke="#1d171a" stroke-width="8"/>
+          <path d="M500 530 C505 560 530 580 555 560" fill="none" stroke="#1d171a" stroke-width="8"/>
+          <path d="M260 490 C190 478 135 485 95 510 M265 525 C195 525 145 545 105 575 M270 560 C205 580 160 615 125 655" stroke="#1d171a" stroke-width="7" fill="none"/>
+          <path d="M740 490 C810 478 865 485 905 510 M735 525 C805 525 855 545 895 575 M730 560 C795 580 840 615 875 655" stroke="#1d171a" stroke-width="7" fill="none"/>
+          <path d="M395 640 C455 670 545 670 605 640" fill="none" stroke="#ff8fba" stroke-width="18"/>
+          <path d="M500 665 L500 700" stroke="#f35c95" stroke-width="8"/>
+          <path d="M500 700 C480 675 445 700 500 742 C555 700 520 675 500 700Z" fill="#ff9fc3" stroke="#f35c95" stroke-width="7"/>
+        </g>
+      </svg>
+    </div>
 
-<div class="floating-gif-container">
-  <img src="./images/Sticker GIF.gif" alt="Floating Pawprint" class="floating-gif">
+    <h1>Cat Care Dashboard</h1>
+    <div class="tagline">daily care for every fur baby</div>
+    <div class="date-pill">🐾 <span id="date-out"></span> · <span id="time-out"></span></div>
+  </header>
+
+  <div class="section-label">Your Cats</div>
+  <div class="cats-row" id="cats-row">
+    <button class="add-cat-btn" onclick="openModal()">+ Add a Cat</button>
+  </div>
+
+  <div class="grid" style="margin-top:1rem;">
+
+    <!-- TASKS -->
+    <div class="card">
+      <div class="card-title">✨ Daily Tasks <span id="active-cat-name" style="font-size:0.75rem;color:var(--text-muted);margin-left:auto;font-family:'Nunito',sans-serif;font-weight:700;"></span></div>
+      <ul style="list-style:none;" id="task-list">
+        <li class="task-item" data-key="feed" onclick="toggleTask(this)"><div class="bubble">✓</div><span class="task-lbl">🍽️ Feed the babies</span></li>
+        <li class="task-item" data-key="litter" onclick="toggleTask(this)"><div class="bubble">✓</div><span class="task-lbl">🪣 Clean litter box</span></li>
+        <li class="task-item" data-key="play" onclick="toggleTask(this)"><div class="bubble">✓</div><span class="task-lbl">🧶 Playtime</span></li>
+        <li class="task-item" data-key="water" onclick="toggleTask(this)"><div class="bubble">✓</div><span class="task-lbl">💧 Check water fountain</span></li>
+        <li class="task-item" data-key="brush" onclick="toggleTask(this)"><div class="bubble">✓</div><span class="task-lbl">🖌️ Brush & snuggles</span></li>
+        <li class="task-item" data-key="meds" onclick="toggleTask(this)"><div class="bubble">✓</div><span class="task-lbl">💊 Medications</span></li>
+      </ul>
+      <div class="progress-row">
+        <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+        <span class="progress-label" id="prog-label">0 / 6</span>
+      </div>
+      <button class="reset-btn" onclick="resetTasks()">↺ reset today's tasks</button>
+    </div>
+
+    <!-- FEEDING LOG -->
+    <div class="card">
+      <div class="card-title">🌸 Feeding Log</div>
+      <div class="feed-form">
+        <input type="time" id="ftime" class="feed-input" style="width:105px;">
+        <select id="fcat" class="feed-input" style="width:110px;"></select>
+        <input type="text" id="fnote" class="feed-input" placeholder="note..." style="flex:1;min-width:60px;">
+        <button class="add-btn" onclick="addFeeding()">+ Add</button>
+      </div>
+      <div class="feed-log" id="feed-log">
+        <p class="feed-empty">no feedings logged yet~ ฅ^•ﻌ•^ฅ</p>
+      </div>
+    </div>
+
+    <!-- CALENDAR -->
+    <div class="card">
+      <div class="card-title">🗓️ Calendar</div>
+      <div class="cal-nav">
+        <button class="cal-nav-btn" onclick="changeMonth(-1)">◀</button>
+        <span class="cal-month" id="cal-month"></span>
+        <button class="cal-nav-btn" onclick="changeMonth(1)">▶</button>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+    </div>
+
+    <!-- VET REMINDERS -->
+    <div class="card">
+      <div class="card-title">🏥 Vet & Reminders</div>
+      <div id="reminder-list"></div>
+      <div class="rem-add-row">
+        <input type="text" id="rem-txt" class="feed-input" placeholder="e.g. annual checkup..." style="flex:1;min-width:100px;">
+        <input type="date" id="rem-date" class="feed-input" style="width:130px;">
+        <button class="add-btn" onclick="addReminder()">+</button>
+      </div>
+    </div>
+
+    <!-- HEALTH LOG -->
+    <div class="card">
+      <div class="card-title">💗 Health & Mood</div>
+      <div class="health-row">
+        <span class="health-label">Appetite</span>
+        <div class="mood-btns" id="appetite-btns">
+          <button class="mood-btn" data-v="great" onclick="setMood('appetite',this)">😋</button>
+          <button class="mood-btn" data-v="ok" onclick="setMood('appetite',this)">😐</button>
+          <button class="mood-btn" data-v="poor" onclick="setMood('appetite',this)">😟</button>
+        </div>
+      </div>
+      <div class="health-row">
+        <span class="health-label">Energy</span>
+        <div class="mood-btns" id="energy-btns">
+          <button class="mood-btn" data-v="high" onclick="setMood('energy',this)">⚡</button>
+          <button class="mood-btn" data-v="normal" onclick="setMood('energy',this)">😌</button>
+          <button class="mood-btn" data-v="low" onclick="setMood('energy',this)">😴</button>
+        </div>
+      </div>
+      <div class="health-row">
+        <span class="health-label">Mood</span>
+        <div class="mood-btns" id="mood-btns">
+          <button class="mood-btn" data-v="happy" onclick="setMood('mood',this)">😸</button>
+          <button class="mood-btn" data-v="neutral" onclick="setMood('mood',this)">🐱</button>
+          <button class="mood-btn" data-v="grumpy" onclick="setMood('mood',this)">😾</button>
+        </div>
+      </div>
+      <div class="health-row" style="margin-top:0.25rem;">
+        <span class="health-label">Weight</span>
+        <input type="number" step="0.1" min="0" max="30" id="weight-val" class="feed-input" style="width:80px;" placeholder="lbs">
+        <button class="add-btn" style="padding:0.4rem 0.75rem;font-size:0.78rem;" onclick="saveWeight()">Save</button>
+        <span id="weight-saved" style="font-size:0.75rem;color:var(--text-soft);margin-left:4px;"></span>
+      </div>
+    </div>
+
+    <!-- NOTES -->
+    <div class="card grid-full">
+      <div class="card-title">🌿 Daily Notes</div>
+      <textarea class="notes-ta" id="notes-ta" placeholder="how are the fur babies today? note any new behaviors, health observations, or funny moments..."></textarea>
+    </div>
+
+  </div>
+
+  <div class="paw-trail">🐾🐾🐾🐾🐾🐾🐾🐾🐾🐾</div>
+  <footer>cat care dashboard · made with ♡ for every fur baby</footer>
 </div>
 
-    <footer>
-        <p>&copy; 2025 Cat Care Dashboard</p>
-    </footer>
-    <script src="script.js"></script>
+<!-- MODAL -->
+<div class="modal-overlay" id="modal" onclick="closeModal(event)">
+  <div class="modal">
+    <h3>Add a New Cat 🐾</h3>
+    <p style="font-size:0.8rem;color:var(--text-soft);margin-bottom:0.75rem;">Pick an icon</p>
+    <div class="emoji-row" id="emoji-row">
+      <div class="emoji-opt picked" data-e="🐱">🐱</div>
+      <div class="emoji-opt" data-e="🐈">🐈</div>
+      <div class="emoji-opt" data-e="🐈‍⬛">🐈‍⬛</div>
+      <div class="emoji-opt" data-e="😸">😸</div>
+      <div class="emoji-opt" data-e="😻">😻</div>
+      <div class="emoji-opt" data-e="🦁">🦁</div>
+      <div class="emoji-opt" data-e="🐯">🐯</div>
+      <div class="emoji-opt" data-e="✨">✨</div>
+    </div>
+    <input type="text" id="cat-name-input" placeholder="Cat's name..." maxlength="20">
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-save" onclick="saveCat()">Add Cat</button>
+    </div>
+  </div>
+</div>
+
+<div class="celebrate" id="celebrate" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:200;"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+let cats=[],activeCat=null,calViewDate=new Date(),reminders=[],feedings=[];
+
+function load(){
+  try{
+    cats=JSON.parse(localStorage.getItem('ccd_cats')||'[]');
+    activeCat=localStorage.getItem('ccd_active')||null;
+    reminders=JSON.parse(localStorage.getItem('ccd_reminders')||'[]');
+    feedings=JSON.parse(localStorage.getItem('ccd_feedings')||'[]');
+  }catch(e){}
+}
+function save(){
+  try{
+    localStorage.setItem('ccd_cats',JSON.stringify(cats));
+    localStorage.setItem('ccd_active',activeCat||'');
+    localStorage.setItem('ccd_reminders',JSON.stringify(reminders));
+    localStorage.setItem('ccd_feedings',JSON.stringify(feedings));
+  }catch(e){}
+}
+
+// CLOCK
+function updateClock(){
+  const n=new Date();
+  document.getElementById('date-out').textContent=n.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+  document.getElementById('time-out').textContent=n.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+}
+updateClock();setInterval(updateClock,1000);
+
+// PREFILL TIME
+const nn=new Date();
+document.getElementById('ftime').value=String(nn.getHours()).padStart(2,'0')+':'+String(nn.getMinutes()).padStart(2,'0');
+
+// CAT PROFILES
+function renderCats(){
+  const row=document.getElementById('cats-row');
+  row.innerHTML='';
+  cats.forEach(c=>{
+    const ch=document.createElement('div');
+    ch.className='cat-chip'+(activeCat===c.id?' active':'');
+    ch.innerHTML=`<div class="chip-avatar">${c.emoji}</div>${c.name}<button class="del-chip" onclick="deleteCat('${c.id}',event)">✕</button>`;
+    ch.onclick=(e)=>{if(!e.target.classList.contains('del-chip'))setActive(c.id);};
+    row.appendChild(ch);
+  });
+  const ab=document.createElement('button');
+  ab.className='add-cat-btn';ab.textContent='+ Add a Cat';ab.onclick=openModal;
+  row.appendChild(ab);
+  const sel=document.getElementById('fcat');
+  sel.innerHTML='<option value="">All cats</option>'+cats.map(c=>`<option value="${c.id}">${c.emoji} ${c.name}</option>`).join('');
+  if(activeCat)sel.value=activeCat;
+  const ac=cats.find(c=>c.id===activeCat);
+  document.getElementById('active-cat-name').textContent=ac?`for ${ac.name}`:'';
+}
+function setActive(id){activeCat=id;save();renderCats();loadTasks();loadHealth();}
+function deleteCat(id,e){
+  e.stopPropagation();
+  if(!confirm('Remove this cat?'))return;
+  cats=cats.filter(c=>c.id!==id);
+  if(activeCat===id)activeCat=cats[0]?.id||null;
+  save();renderCats();loadTasks();
+}
+
+// MODAL
+let pickedEmoji='🐱';
+function openModal(){document.getElementById('modal').classList.add('open');document.getElementById('cat-name-input').focus();}
+function closeModal(e){if(!e||e.target===document.getElementById('modal'))document.getElementById('modal').classList.remove('open');}
+document.getElementById('emoji-row').onclick=function(e){
+  const opt=e.target.closest('.emoji-opt');if(!opt)return;
+  document.querySelectorAll('.emoji-opt').forEach(o=>o.classList.remove('picked'));
+  opt.classList.add('picked');pickedEmoji=opt.dataset.e;
+};
+function saveCat(){
+  const name=document.getElementById('cat-name-input').value.trim();
+  if(!name){document.getElementById('cat-name-input').focus();return;}
+  const cat={id:Date.now().toString(),name,emoji:pickedEmoji};
+  cats.push(cat);if(!activeCat)activeCat=cat.id;
+  save();renderCats();loadTasks();loadHealth();
+  document.getElementById('cat-name-input').value='';
+  document.getElementById('modal').classList.remove('open');
+  showToast('🐾 '+name+' added!');
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+
+// TASKS
+function taskKey(){return 'ccd_tasks_'+(activeCat||'all')+'_'+new Date().toDateString();}
+function loadTasks(){
+  let done=[];try{done=JSON.parse(localStorage.getItem(taskKey())||'[]');}catch(e){}
+  document.querySelectorAll('.task-item').forEach(t=>t.classList.toggle('done',done.includes(t.dataset.key)));
+  updateProgress();
+}
+function saveTasks(){
+  const done=[...document.querySelectorAll('.task-item.done')].map(t=>t.dataset.key);
+  try{localStorage.setItem(taskKey(),JSON.stringify(done));}catch(e){}
+}
+function toggleTask(el){
+  el.classList.toggle('done');saveTasks();updateProgress();
+  const total=document.querySelectorAll('.task-item').length;
+  const done=document.querySelectorAll('.task-item.done').length;
+  if(done===total)celebrate();
+}
+function resetTasks(){document.querySelectorAll('.task-item').forEach(t=>t.classList.remove('done'));saveTasks();updateProgress();}
+function updateProgress(){
+  const total=document.querySelectorAll('.task-item').length;
+  const done=document.querySelectorAll('.task-item.done').length;
+  document.getElementById('prog-fill').style.width=Math.round(done/total*100)+'%';
+  document.getElementById('prog-label').textContent=done+' / '+total;
+}
+function celebrate(){
+  showToast('🎉 All done! Amazing cat parent!');
+  const cel=document.getElementById('celebrate');
+  const colors=['#f2a7c3','#d4b8e8','#7dd9a8','#f7d0e4','#ffc8e0','#b8a5cc'];
+  for(let i=0;i<45;i++){
+    const p=document.createElement('div');p.className='confetti-piece';
+    p.style.cssText=`left:${Math.random()*100}%;top:-10px;background:${colors[i%colors.length]};animation-delay:${Math.random()*0.8}s;animation-duration:${1.4+Math.random()*0.8}s;`;
+    cel.appendChild(p);
+  }
+  setTimeout(()=>cel.innerHTML='',3000);
+}
+
+// FEEDING
+function addFeeding(){
+  const t=document.getElementById('ftime').value;if(!t)return;
+  const [h,m]=t.split(':');const hr=parseInt(h);const ap=hr>=12?'PM':'AM';const h12=hr%12||12;
+  const catId=document.getElementById('fcat').value;
+  const cat=cats.find(c=>c.id===catId);
+  const note=document.getElementById('fnote').value.trim();
+  feedings.unshift({id:Date.now().toString(),time:`${h12}:${m} ${ap}`,catId,catName:cat?cat.name:'',catEmoji:cat?cat.emoji:'',note,date:new Date().toDateString()});
+  save();renderFeedings();document.getElementById('fnote').value='';showToast('🍽️ Feeding logged!');
+}
+function renderFeedings(){
+  const log=document.getElementById('feed-log');
+  const today=feedings.filter(f=>f.date===new Date().toDateString());
+  if(!today.length){log.innerHTML='<p class="feed-empty">no feedings logged yet~ ฅ^•ﻌ•^ฅ</p>';return;}
+  log.innerHTML=today.map(f=>`<div class="feed-entry">
+    <span class="feed-time-tag">${f.time}</span>
+    ${f.catName?`<span class="feed-cat-tag">${f.catEmoji} ${f.catName}</span>`:''}
+    <span class="feed-note-text">${f.note||'fed!'}</span>
+    <button class="del-btn" onclick="delFeeding('${f.id}')">×</button>
+  </div>`).join('');
+}
+function delFeeding(id){feedings=feedings.filter(f=>f.id!==id);save();renderFeedings();}
+
+// CALENDAR
+function buildCal(){
+  const y=calViewDate.getFullYear(),mo=calViewDate.getMonth();
+  const today=new Date();const td=today.getDate(),tm=today.getMonth(),ty=today.getFullYear();
+  const first=new Date(y,mo,1).getDay(),days=new Date(y,mo+1,0).getDate();
+  document.getElementById('cal-month').textContent=calViewDate.toLocaleDateString('en-US',{month:'long',year:'numeric'});
+  const dns=['Su','Mo','Tu','We','Th','Fr','Sa'];
+  let h=dns.map(d=>`<div class="cal-dn">${d}</div>`).join('');
+  for(let i=0;i<first;i++)h+=`<div class="cal-d empty"></div>`;
+  for(let d=1;d<=days;d++)h+=`<div class="cal-d${d===td&&mo===tm&&y===ty?' today':''}">${d}</div>`;
+  document.getElementById('cal-grid').innerHTML=h;
+}
+function changeMonth(dir){calViewDate.setMonth(calViewDate.getMonth()+dir);buildCal();}
+
+// REMINDERS
+function renderReminders(){
+  const list=document.getElementById('reminder-list');
+  if(!reminders.length){list.innerHTML='<p class="feed-empty">no reminders set yet</p>';return;}
+  const today=new Date();today.setHours(0,0,0,0);
+  list.innerHTML=reminders.map((r,i)=>{
+    let dotClass='green',cd='';
+    if(r.date){
+      const diff=Math.round((new Date(r.date+'T00:00:00')-today)/86400000);
+      if(diff<0){cd='overdue';dotClass='red';}
+      else if(diff===0){cd='today!';dotClass='red';}
+      else if(diff<=3){cd='in '+diff+'d';dotClass='red';}
+      else if(diff<=7){cd='in '+diff+'d';dotClass='amber';}
+      else{cd='in '+diff+'d';dotClass='green';}
+    }
+    const dateStr=r.date?new Date(r.date+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';
+    const cdHtml=cd?`<span class="rem-countdown ${dotClass==='red'?'soon':dotClass==='amber'?'near':'ok'}">${cd}</span>`:'';
+    return `<div class="reminder-item"><div class="dot ${dotClass}"></div><span class="rem-text">${r.text}</span><span class="rem-date">${dateStr}</span>${cdHtml}<button class="del-btn" onclick="delReminder(${i})">×</button></div>`;
+  }).join('');
+}
+function addReminder(){
+  const txt=document.getElementById('rem-txt').value.trim();if(!txt)return;
+  const date=document.getElementById('rem-date').value;
+  reminders.push({text:txt,date});reminders.sort((a,b)=>a.date<b.date?-1:1);
+  save();renderReminders();document.getElementById('rem-txt').value='';document.getElementById('rem-date').value='';showToast('🏥 Reminder saved!');
+}
+function delReminder(i){reminders.splice(i,1);save();renderReminders();}
+
+// HEALTH
+function healthKey(){return 'ccd_health_'+(activeCat||'all')+'_'+new Date().toDateString();}
+function getHealth(){try{return JSON.parse(localStorage.getItem(healthKey())||'{}');}catch(e){return {};}}
+function loadHealth(){
+  const h=getHealth();
+  ['appetite','energy','mood'].forEach(cat=>{
+    document.querySelectorAll(`#${cat}-btns .mood-btn`).forEach(b=>b.classList.toggle('active',b.dataset.v===h[cat]));
+  });
+  document.getElementById('weight-val').value=h.weight||'';
+  document.getElementById('weight-saved').textContent=h.weightDate?'saved '+h.weightDate:'';
+}
+function setMood(cat,btn){
+  document.querySelectorAll(`#${cat}-btns .mood-btn`).forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const h=getHealth();h[cat]=btn.dataset.v;
+  localStorage.setItem(healthKey(),JSON.stringify(h));
+}
+function saveWeight(){
+  const v=document.getElementById('weight-val').value;if(!v)return;
+  const h=getHealth();h.weight=v;h.weightDate=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'});
+  localStorage.setItem(healthKey(),JSON.stringify(h));
+  document.getElementById('weight-saved').textContent='saved '+h.weightDate;showToast('⚖️ Weight saved!');
+}
+
+// NOTES
+const notesEl=document.getElementById('notes-ta');
+function notesKey(){return 'ccd_notes_'+new Date().toDateString();}
+try{notesEl.value=localStorage.getItem(notesKey())||'';}catch(e){}
+notesEl.addEventListener('input',()=>{try{localStorage.setItem(notesKey(),notesEl.value);}catch(e){}});
+
+// TOAST
+function showToast(msg){
+  const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+// BACKGROUND PAW TRACKS
+const PAW_SVG=`<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><ellipse cx="50" cy="68" rx="22" ry="18" fill="#f2a7c3"/><ellipse cx="25" cy="45" rx="11" ry="13" fill="#f2a7c3"/><ellipse cx="50" cy="38" rx="11" ry="13" fill="#f2a7c3"/><ellipse cx="75" cy="45" rx="11" ry="13" fill="#f2a7c3"/><ellipse cx="36" cy="28" rx="8" ry="10" fill="#f2a7c3"/></svg>`;
+const bgEl=document.getElementById('bg-paws');
+
+function spawnTrail(){
+  const startX=Math.random()*85;
+  const startY=Math.random()*75;
+  const angle=20+Math.random()*50;
+  const dist=180+Math.random()*280;
+  const rad=(angle*Math.PI)/180;
+  const dx=Math.cos(rad)*dist;
+  const dy=Math.sin(rad)*dist;
+  const steps=4+Math.floor(Math.random()*5);
+  const dur=7+Math.random()*9;
+  const delay=Math.random()*8;
+  const size=14+Math.random()*14;
+  const op=0.18+Math.random()*0.2;
+  const rot=angle-90;
+  for(let i=0;i<steps;i++){
+    const el=document.createElement('div');
+    el.className='paw-track';
+    const frac=i/steps;
+    const sx=startX+Math.cos(rad)*dist*frac;
+    const sy=startY+Math.sin(rad)*dist*frac;
+    const side=i%2===0?1:-1;
+    const px=-Math.sin(rad)*side*10;
+    const py=Math.cos(rad)*side*10;
+    const remDx=dx*(1-frac);
+    const remDy=dy*(1-frac);
+    el.style.cssText=`left:calc(${sx}% + ${px}px);top:calc(${sy}% + ${py}px);--dx:${remDx}px;--dy:${remDy}px;--r:${rot}deg;--op:${op};width:${size}px;height:${size}px;animation-duration:${dur}s;animation-delay:${delay+i*0.35}s;`;
+    el.innerHTML=PAW_SVG;
+    bgEl.appendChild(el);
+    setTimeout(()=>el.remove(),(dur+delay+steps*0.35+2)*1000);
+  }
+}
+for(let i=0;i<10;i++)setTimeout(spawnTrail,i*700);
+setInterval(spawnTrail,3200);
+
+// INIT
+load();renderCats();loadTasks();loadHealth();buildCal();renderFeedings();renderReminders();
+</script>
 </body>
 </html>
